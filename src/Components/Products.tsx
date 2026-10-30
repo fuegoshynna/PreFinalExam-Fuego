@@ -1,12 +1,13 @@
 import { ChevronDown, ChevronLeft, ChevronRight, Plus, Star } from 'lucide-react'
 import { useState } from 'react'
 import { formatCurrency, type CurrencyCode } from './currency'
+import ProductImageViewer from './ProductImageViewer'
 
 export type Product = {
   id: number
   name: string
   category: 'Clothing' | 'Jewelry' | 'Shoes'
-  price: number
+  prices: Record<CurrencyCode, number>
   stock: number
   featured: boolean
   image: string
@@ -33,10 +34,12 @@ type ProductCardProps = {
 function ProductCard({ product, isWishlisted, onAddToCart, onToggleWishlist, compact = false, onSelectProduct, currency }: ProductCardProps) {
   const isUnavailable = product.stock === 0
   const images = [...new Set([
-    ...(product.images?.length ? product.images : [product.image]),
+    product.image,
+    ...(product.images ?? []),
     ...(product.colorOptions?.map((option) => option.image) ?? []),
   ])]
   const [activeImage, setActiveImage] = useState(0)
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
 
   return (
     <article
@@ -54,11 +57,21 @@ function ProductCard({ product, isWishlisted, onAddToCart, onToggleWishlist, com
     >
       <div>
         <div className="relative aspect-square overflow-hidden">
-          <img
-            src={images[activeImage] ?? product.image}
-            alt={product.name}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              setIsImageViewerOpen(true)
+            }}
+            aria-label={`View ${product.name} images`}
+            className="absolute inset-0 h-full w-full cursor-zoom-in"
+          >
+            <img
+              src={images[activeImage] ?? product.image}
+              alt={product.name}
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            />
+          </button>
           {images.length > 1 && (
             <>
               <button
@@ -138,7 +151,7 @@ function ProductCard({ product, isWishlisted, onAddToCart, onToggleWishlist, com
         </div>
       </div>
       <div className="flex items-center justify-between p-4 pt-0">
-        <span className="text-base font-bold">{formatCurrency(product.price, currency)}</span>
+        <span className="text-base font-bold">{formatCurrency(product.prices[currency], currency)}</span>
         {!compact && <button
           type="button"
           onClick={(event) => {
@@ -152,6 +165,15 @@ function ProductCard({ product, isWishlisted, onAddToCart, onToggleWishlist, com
           <span>{isUnavailable ? 'No Stock' : 'Add'}</span>
         </button>}
       </div>
+      {isImageViewerOpen && (
+        <ProductImageViewer
+          images={images}
+          activeImage={activeImage}
+          productName={product.name}
+          onClose={() => setIsImageViewerOpen(false)}
+          onImageChange={setActiveImage}
+        />
+      )}
     </article>
   )
 }
@@ -166,11 +188,16 @@ type ProductListProps = {
 }
 
 export function FeaturedProducts({ products, wishlist, onAddToCart, onToggleWishlist, onSelectProduct, currency }: ProductListProps) {
+  const featuredProducts = [
+    ...products.filter((product) => product.isNew),
+    ...products.filter((product) => product.featured && !product.isNew),
+  ].slice(0, 4)
+
   return (
     <section className="space-y-6">
       <h2 className="text-2xl font-bold tracking-tight">Featured Products</h2>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-        {products.filter((product) => product.featured).slice(0, 4).map((product) => (
+        {featuredProducts.map((product) => (
           <ProductCard
             key={product.id}
             product={product}
