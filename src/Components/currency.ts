@@ -6,23 +6,13 @@ export const currencies: { code: CurrencyCode; label: string; symbol: string }[]
   { code: 'EUR', label: 'EURO', symbol: '€' },
 ]
 
-const exchangeRates: Record<CurrencyCode, number> = {
-  USD: 1,
-  PHP: 56,
-  EUR: 0.92,
-}
-
-export function formatCurrency(amountInUsd: number, currency: CurrencyCode): string {
+export function formatCurrency(amount: number, currency: CurrencyCode): string {
   return new Intl.NumberFormat(currency === 'PHP' ? 'en-PH' : currency === 'EUR' ? 'de-DE' : 'en-US', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amountInUsd * exchangeRates[currency])
-}
-
-export function convertToUsd(amount: number, currency: CurrencyCode): number {
-  return amount / exchangeRates[currency]
+  }).format(amount)
 }
 
 export function currencySymbol(currency: CurrencyCode): string {

@@ -101,7 +101,13 @@ export default function App() {
           setSelectedProductId(null)
           setActiveTab(tab)
         }}
-        onSearchChange={setSearchQuery}
+        onSearchChange={(query) => {
+          setSearchQuery(query)
+          if (query.trim()) {
+            setSelectedProductId(null)
+            setActiveTab('products')
+          }
+        }}
         onThemeToggle={() => setDarkMode((enabled) => !enabled)}
         onWishlistOpen={() => setIsWishlistOpen(true)}
         onInspectorToggle={() => setIsInspectorOpen((open) => !open)}
@@ -172,7 +178,7 @@ export default function App() {
         </button>
       </div>
 
-      <AddProductModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onCreate={addProduct} currency={currency} />
+      <AddProductModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onCreate={addProduct} />
       {isWishlistOpen && (
         <WishlistDrawer
           products={products}

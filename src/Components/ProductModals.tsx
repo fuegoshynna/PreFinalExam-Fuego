@@ -2,16 +2,15 @@ import { Plus, Star, X } from 'lucide-react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { useState } from 'react'
 import type { Product } from './Products'
-import { convertToUsd, currencySymbol, formatCurrency, type CurrencyCode } from './currency'
+import { currencySymbol, formatCurrency, type CurrencyCode } from './currency'
 
 type AddProductModalProps = {
   open: boolean
   onClose: () => void
   onCreate: (product: Omit<Product, 'id'>) => void
-  currency: CurrencyCode
 }
 
-export function AddProductModal({ open, onClose, onCreate, currency }: AddProductModalProps) {
+export function AddProductModal({ open, onClose, onCreate }: AddProductModalProps) {
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [uploadError, setUploadError] = useState('')
   const [isReadingImage, setIsReadingImage] = useState(false)
@@ -73,11 +72,14 @@ export function AddProductModal({ open, onClose, onCreate, currency }: AddProduc
     }
     const formData = new FormData(form)
     const name = String(formData.get('name')).trim()
-    const enteredPrice = Number(formData.get('price'))
-    const price = convertToUsd(enteredPrice, currency)
+    const prices = {
+      EUR: Number(formData.get('price-EUR')),
+      PHP: Number(formData.get('price-PHP')),
+      USD: Number(formData.get('price-USD')),
+    }
     const stock = Number(formData.get('stock'))
-    if (!name || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) {
-      setFormError('Enter a product name, a valid price, and a whole-number stock quantity of 0 or more.')
+    if (!name || Object.values(prices).some((price) => !Number.isFinite(price) || price < 0) || !Number.isInteger(stock) || stock < 0) {
+      setFormError('Enter a product name, valid prices for all currencies, and a whole-number stock quantity of 0 or more.')
       return
     }
     const incompleteColorOption = colorOptions.some((option) => option.name.trim() !== '' && !option.image)
@@ -92,7 +94,7 @@ export function AddProductModal({ open, onClose, onCreate, currency }: AddProduc
     onCreate({
       name,
       category: formData.get('category') as Product['category'],
-      price,
+      prices,
       stock,
       featured: false,
       image: images[0],
@@ -137,10 +139,12 @@ export function AddProductModal({ open, onClose, onCreate, currency }: AddProduc
               <option value="Shoes">Shoes</option>
             </select>
           </label>
-          <label className="block text-xs font-bold uppercase text-zinc-500">
-            Price ({currencySymbol(currency)})
-            <input required min="0" step="0.01" name="price" type="number" className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-sm font-normal normal-case dark:border-zinc-700 dark:bg-zinc-800" />
-          </label>
+          {(['EUR', 'PHP', 'USD'] as const).map((priceCurrency) => (
+            <label key={priceCurrency} className="block text-xs font-bold uppercase text-zinc-500">
+              Price ({priceCurrency} {currencySymbol(priceCurrency)})
+              <input required min="0" step="0.01" name={`price-${priceCurrency}`} type="number" className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-sm font-normal normal-case dark:border-zinc-700 dark:bg-zinc-800" />
+            </label>
+          ))}
           <label className="block text-xs font-bold uppercase text-zinc-500">
             Stock Quantity
             <input required min="0" step="1" name="stock" type="number" defaultValue="0" className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-sm font-normal normal-case dark:border-zinc-700 dark:bg-zinc-800" />
@@ -317,7 +321,7 @@ export function WishlistDrawer({ products, wishlist, currency, onClose, onToggle
                 <img src={product.image} alt={product.name} className="h-16 w-16 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{product.name}</p>
-                  <p className="text-sm text-zinc-500">{formatCurrency(product.price, currency)}</p>
+                  <p className="text-sm text-zinc-500">{formatCurrency(product.prices[currency], currency)}</p>
                 </div>
                 <button type="button" onClick={() => onToggleWishlist(product.id)} aria-label={`Remove ${product.name} from wishlist`} className="p-2 text-amber-500">
                   <Star className="h-5 w-5 fill-current" />

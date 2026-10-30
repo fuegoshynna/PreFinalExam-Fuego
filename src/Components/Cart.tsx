@@ -12,7 +12,7 @@ type CartProps = {
 }
 
 export default function Cart({ cart, onQuantityChange, onRemove, onTabChange, currency }: CartProps) {
-  const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0)
+  const subtotal = cart.reduce((total, item) => total + item.prices[currency] * item.quantity, 0)
 
   return (
     <section className="mx-auto max-w-4xl space-y-6">
@@ -35,7 +35,7 @@ export default function Cart({ cart, onQuantityChange, onRemove, onTabChange, cu
                   <span className="text-[10px] font-semibold uppercase text-zinc-400">{item.category}</span>
                   <h3 className="truncate text-sm font-semibold">{item.name}</h3>
                   {item.selectedSize && <p className="text-xs text-zinc-500 dark:text-zinc-400">Size: {item.selectedSize}</p>}
-                  <p className="text-sm font-bold">{formatCurrency(item.price, currency)}</p>
+                  <p className="text-sm font-bold">{formatCurrency(item.prices[currency], currency)}</p>
                   <p className={item.stock < 5 ? 'text-xs font-semibold text-red-600' : 'text-xs text-zinc-500 dark:text-zinc-400'}>
                     {item.stock === 0 ? 'No Stock' : item.stock < 5 ? `Low Stock — ${item.stock} left` : `${item.stock} in stock`}
                   </p>

@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus, Star } from 'lucide-
 import { useState, type FormEvent } from 'react'
 import type { Product } from './Products'
 import { formatCurrency, type CurrencyCode } from './currency'
+import ProductImageViewer from './ProductImageViewer'
 
 export type ProductReview = {
   id: number
@@ -28,11 +29,12 @@ export default function ProductDetail({
   currency,
 }: ProductDetailProps) {
   const colorOptions = product.colorOptions ?? []
-  const images = [...new Set([...(product.images?.length ? product.images : [product.image]), ...colorOptions.map((option) => option.image)])]
+  const images = [...new Set([product.image, ...(product.images ?? []), ...colorOptions.map((option) => option.image)])]
   const [activeImage, setActiveImage] = useState(() => {
     const firstColorImage = colorOptions[0]?.image
     return firstColorImage ? images.indexOf(firstColorImage) : 0
   })
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
   const [selectedColor, setSelectedColor] = useState(colorOptions[0]?.name ?? '')
   const [selectedSize, setSelectedSize] = useState('')
   const [quantity, setQuantity] = useState(0)
@@ -59,10 +61,27 @@ export default function ProductDetail({
         <ArrowLeft className="h-4 w-4" /> Back to products
       </button>
 
+      {isImageViewerOpen && (
+        <ProductImageViewer
+          images={images}
+          activeImage={activeImage}
+          productName={product.name}
+          onClose={() => setIsImageViewerOpen(false)}
+          onImageChange={setActiveImage}
+        />
+      )}
+
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
         <div className="space-y-3">
           <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-slate-100 dark:bg-zinc-900">
-            <img src={images[activeImage]} alt={product.name} className="h-full w-full object-cover" />
+            <button
+              type="button"
+              onClick={() => setIsImageViewerOpen(true)}
+              aria-label={`View ${product.name} images`}
+              className="absolute inset-0 h-full w-full cursor-zoom-in"
+            >
+              <img src={images[activeImage]} alt={product.name} className="h-full w-full object-cover" />
+            </button>
             {images.length > 1 && (
               <>
                 <button
@@ -106,7 +125,7 @@ export default function ProductDetail({
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">{product.category}</p>
             <h1 className="font-serif text-3xl font-semibold md:text-4xl">{product.name}</h1>
-            <p className="text-2xl font-semibold">{formatCurrency(product.price, currency)}</p>
+            <p className="text-2xl font-semibold">{formatCurrency(product.prices[currency], currency)}</p>
             <p className={product.stock < 5 ? 'font-semibold text-red-600' : 'text-zinc-600 dark:text-zinc-300'}>
               {availableStock === 0
                 ? 'No Stock'

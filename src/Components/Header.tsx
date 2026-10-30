@@ -98,6 +98,19 @@ export default function Header({
           </button>
         </div>
       </div>
+      <div className="px-4 pb-3 sm:hidden">
+        <div className="relative">
+          <input
+            type="search"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(event) => onSearchChange(event.target.value)}
+            className="w-full rounded-full border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-slate-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white dark:focus:ring-lime-400"
+            aria-label="Search products"
+          />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 opacity-50" aria-hidden="true" />
+        </div>
+      </div>
       <nav className="flex justify-center gap-2 border-t border-slate-200 px-2 py-2 text-xs font-medium md:hidden dark:border-zinc-800" aria-label="Mobile navigation">
         <button type="button" onClick={() => onTabChange('home')} className={tabClass('home')}>Home</button>
         <button type="button" onClick={() => onTabChange('products')} className={tabClass('products')}>Products</button>
